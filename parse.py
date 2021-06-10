@@ -1,6 +1,15 @@
 import requests
 from bs4 import BeautifulSoup as bs
 from lists import cities, republics, okrugs
+from datetime import date
+
+date_list = []
+region_list = []
+type_list = []
+situation_list = []
+victims_list = []
+injured_list = []
+current_date = date.today().strftime("%d/%m/%Y")
 
 def get_html(url):
     r = requests.get(url)
@@ -15,13 +24,49 @@ def get_links(html):
         links.append(link)
     return links
 
-def page_date(url):
+def page_date(html):
     soup = bs(html, 'html.parser')
-
     try:
         date = soup.find('div', class_ = 'b-article-header__date').text
     except Exception:
         date = ''
+    # date_list.append(str(date))
+    if date.find('Сегодня') != -1:
+        # date_list.append(str(date.rsplit(' ', 1)[-1]))
+        date = current_date
+        date_list.append(date)
+    else:
+        # date_list.append(str(date.split(' ', 2)[-1]))
+        date = str(date.split(' ', 2)[-1])
+        d, m, y = date.split(' ')
+
+        if m.find('Янв') != -1:
+            m = '01'
+        elif m.find('Фев') != -1:
+            m = '02'
+        elif m.find('Мар') != -1:
+            m = '03'
+        elif m.find('Апр') != -1:
+            m = '04'
+        elif m.find('Ма') != -1:
+            m = '05'
+        elif m.find('Июн') != -1:
+            m = '06'
+        elif m.find('Июл') != -1:
+            m = '07'
+        elif m.find('Авг') != -1:
+            m = '08'
+        elif m.find('Сен') != -1:
+            m = '09'
+        elif m.find('Окт') != -1:
+            m = '10'
+        elif m.find('Ноя') != -1:
+            m = '11'
+        else:
+            m = '12'
+
+        date = d + "/" + m + "/" + y
+        date_list.append(date)
 
     try:
         tags = soup.find('div', class_ = 'b-tags').find_all('a')
@@ -47,7 +92,7 @@ def page_date(url):
                 or substring.find('Округ') != -1 or substring.find('Море') != -1 \
                 or substring.find('море') != -1 or substring.find('Город') != -1:
                     region = substring
-
+    region_list.append(str(region))
 
     # тк теги на сайте МЧС порой написаны неточно, то всё, что не имеет достаточно точной
     # категоризации, будет относиться к категории 'Прочее'
@@ -104,14 +149,32 @@ def page_date(url):
                 victims = 'Есть погибшие'
             elif substring.find('пострадав') != -1 or substring.find('Пострадав') != -1:
                 injured = 'Есть пострадавшие'
-    data = {'date': date,
-            'region': region,
-            'type': type,
-            'situation': situation,
-            'victims': victims,
-            'injured': injured}
-    return print(data)
+    type_list.append(str(type))
+    situation_list.append(str(situation))
+    victims_list.append(str(victims))
+    injured_list.append(str(injured))
 
+    # data = {'date': date,
+    #         'region': region,
+    #         'type': type,
+    #         'situation': situation,
+    #         'victims': victims,
+    #         'injured': injured}
+    # return data
+
+# ДЛЯ СЛОВАРЯ
+
+# count = 1
+# while count <= 5:
+#     url = 'http://www.mchsmedia.ru/news/' + str(count) + '/?category=incidents'
+#     all_links = get_links(get_html(url))
+#     for link in all_links:
+#         html = get_html(link)
+#         data = page_date(html)
+#         print(type(data['date']))
+#     count += 1
+
+# ДЛЯ СПИСКОВ
 
 count = 1
 while count <= 5:
@@ -119,5 +182,8 @@ while count <= 5:
     all_links = get_links(get_html(url))
     for link in all_links:
         html = get_html(link)
-        data = page_date(html)
+        page_date(html)
     count += 1
+
+# for i in date_list:
+#     print(i)
